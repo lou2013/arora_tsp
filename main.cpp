@@ -9,8 +9,29 @@ struct TestCase {
     std::string name;
     std::vector<Point> points;
     double optimal_path_length;
-    // For tests where the connection cost is different, we'll note it in the name.
 };
+
+// ================== MODIFICATION START ==================
+// Helper function to print the edges of a calculated tour.
+void PrintPath(const Tour& tour) {
+    std::cout << "\tPath Edges (" << tour.path.size() << " found): ";
+    if (tour.path.empty()) {
+        std::cout << "None\n";
+        return;
+    }
+
+    for (size_t i = 0; i < tour.path.size(); ++i) {
+        const auto& edge = tour.path[i];
+        std::cout << "(" << edge.first.x << ", " << edge.first.y << ") <-> "
+                  << "(" << edge.second.x << ", " << edge.second.y << ")";
+        if (i < tour.path.size() - 1) {
+            std::cout << " | ";
+        }
+    }
+    std::cout << "\n";
+}
+// =================== MODIFICATION END ===================
+
 
 int main() {
     // --- Test Case Definitions ---
@@ -23,7 +44,7 @@ int main() {
         {
             "Diagonal Line (Grid Weakness Test)",
             { {10, 10}, {40, 40}, {70, 70}, {100, 100} },
-            127.28 
+            127.28
         },
         {
             "U-Shape Path",
@@ -53,7 +74,7 @@ int main() {
     };
 
     // k=3 would be much more accurate but significantly slower.
-    int k = 3;
+    int k = 2; // Kept at 1 for speed during testing
 
     // --- Main Test Loop ---
     for (const auto& test : all_tests) {
@@ -62,21 +83,29 @@ int main() {
         std::cout << "====================================================================\n";
         std::cout << "Points: " << test.points.size() << ", k=" << k << std::endl;
         std::cout << std::fixed << std::setprecision(2);
-        
+
         // The known best answer for a path visiting all nodes.
         std::cout << "> Optimal Path Length: " << test.optimal_path_length << std::endl;
-        
+
         // Initialize the solver for this test case
         DPSolver solver(test.points, k);
-        
+
         // We need to call one of the solves first to populate the DP table
-        double cost1 = solver.Solve(); 
-        double cost2 = solver.Solve2();
+        Tour tour1 = solver.Solve();
+        Tour tour2 = solver.Solve2();
 
         std::cout << "\n--- RESULTS ---\n";
-        std::cout << "[Solve()  - Open Path Approx]:   " << cost1 << std::endl;
-        std::cout << "[Solve2() - Connection Approx]: " << cost2 << std::endl;
-        
+        std::cout << "[Solve()  - Open Path Approx]:   " << tour1.cost << std::endl;
+        // ================== MODIFICATION START ==================
+        PrintPath(tour1); // Display the path for tour1
+        // =================== MODIFICATION END ===================
+
+        std::cout << "[Solve2() - Connection Approx]: " << tour2.cost << std::endl;
+        // ================== MODIFICATION START ==================
+        PrintPath(tour2); // Display the path for tour2
+        // =================== MODIFICATION END ===================
+
+
         std::cout << "\n--- ANALYSIS ---\n";
         if (test.name.find("Spokes") != std::string::npos) {
             std::cout << "Solve() correctly approximates the long path around the spokes.\n";
